@@ -44,10 +44,10 @@ public class UsuarioController {
         }
     }
 
-    @GetMapping(value = "usuario/listar")
-    public ResponseEntity<?> findAll(){
-        return ResponseEntity.ok(usuarioRepository.findAll());
-    }
+//    @GetMapping(value = "usuario/listar")
+//    public ResponseEntity<?> findAll(){
+//        return ResponseEntity.ok(usuarioRepository.findAll());
+//    }
 
     @GetMapping(value = "/{id}")
     public Optional<Usuario> usuarioPorId(@PathVariable int id){
