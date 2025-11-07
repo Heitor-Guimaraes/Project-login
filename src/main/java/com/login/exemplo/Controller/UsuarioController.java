@@ -29,19 +29,15 @@ public class UsuarioController {
     }
 
     @PostMapping("login")
-    public ResponseEntity<?> findUser(@RequestBody Usuario user){
+    public ResponseEntity<?> findUser(@Valid @RequestBody UsuarioRequestDTO user) {
         Usuario findUser = usuarioRepository.findByEmail(user.getEmail());
-        if (findUser == null){
-            return ResponseEntity.ok("Usuário não encontrado");
+        if (findUser == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado");
         }
-        else {
-            if (findUser.getPassword().equals(user.getPassword())) {
-                return ResponseEntity.ok("Logado com sucesso");
-            }
-            else{
-                return ResponseEntity.ok("Senha incorreta");
-            }
+        if (findUser.getPassword().equals(user.getPassword())) {
+            return ResponseEntity.ok(new UsuarioResponseDTO(findUser));
         }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Senha incorreta");
     }
 
 //    @GetMapping(value = "usuario/listar")
@@ -50,8 +46,12 @@ public class UsuarioController {
 //    }
 
     @GetMapping(value = "/{id}")
-    public Optional<Usuario> usuarioPorId(@PathVariable int id){
-        return  usuarioRepository.findById(id);
+    public ResponseEntity<?> usuarioPorId(@PathVariable int id) {
+        Optional<Usuario> usuario = usuarioRepository.findById(id);
+        if (usuario.isPresent()) {
+            return ResponseEntity.ok(new UsuarioResponseDTO(usuario.get()));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado");
     }
 
 
@@ -65,22 +65,20 @@ public class UsuarioController {
     @GetMapping(value = "usuario/listar")
     public List<UsuarioResponseDTO> listarUsuarios1(){
         List<Usuario> usuarios = usuarioRepository.findAll();
-//        List<UsuarioResponseDTO> listaDeUsuarios = new ArrayList<>();
         List<UsuarioResponseDTO> listaDeUsuarios = usuarios.stream().map(UsuarioResponseDTO::new).toList();
-//        for (Usuario usuario : usuarios) {
-//            listaDeUsuarios.add(new UsuarioResponseDTO(usuario));
-//        }
         return listaDeUsuarios;
     }
 
     @PutMapping(value = "usuario/atualizar/{id}")
-    public ResponseEntity<?> atualizarNomeUsuario(@PathVariable int id, @RequestBody Usuario usuario) {
+    public ResponseEntity<?> atualizarNomeUsuario(@PathVariable int id, @Valid @RequestBody UsuarioRequestDTO usuario) {
         Optional<Usuario> usuarioOptional = usuarioRepository.findById(id);
         if (usuarioOptional.isPresent()) {
             Usuario usuarioExistente = usuarioOptional.get();
             usuarioExistente.setName(usuario.getName());
+            usuarioExistente.setEmail(usuario.getEmail());
+            usuarioExistente.setPassword(usuario.getPassword());
             usuarioRepository.save(usuarioExistente);
-            return ResponseEntity.ok("Nome do usuário atualizado com sucesso");
+            return ResponseEntity.ok(new UsuarioResponseDTO(usuarioExistente));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado");
     }

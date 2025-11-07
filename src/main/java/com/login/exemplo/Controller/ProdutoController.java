@@ -27,18 +27,20 @@ public class ProdutoController {
     public ResponseEntity<?> buscarId(@PathVariable int id){
         Optional<Produto> produto = produtoRepository.findById(id);
         if (produto.isPresent()){
-            return ResponseEntity.ok(produto);
-
-        }else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario Não Encontrado");
+            return ResponseEntity.ok(new ProdutoResponseDTO(produto.get()));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Produto não encontrado");
         }
-
     }
 
     //Busca todos
     @GetMapping("/listar/all")
-    public ResponseEntity<?> buscarTodos(){
-        return ResponseEntity.ok(produtoRepository.findAll());
+    public ResponseEntity<List<ProdutoResponseDTO>> buscarTodos() {
+        List<Produto> produtos = produtoRepository.findAll();
+        List<ProdutoResponseDTO> listaDeProdutos = produtos.stream()
+                .map(ProdutoResponseDTO::new)
+                .toList();
+        return ResponseEntity.ok(listaDeProdutos);
     }
 
     //criar produto
@@ -62,19 +64,17 @@ public class ProdutoController {
 
     }
     @PutMapping("/{id}")
-    public ResponseEntity<?> alterarProduto(@PathVariable int id, @RequestBody Produto produto){
+    public ResponseEntity<?> alterarProduto(@PathVariable int id, @Valid @RequestBody ProdutoRequestDTO produto) {
         Optional<Produto> novo = produtoRepository.findById(id);
-        if (novo.isPresent()){
+        if (novo.isPresent()) {
             Produto produto1 = novo.get();
             produto1.setName(produto.getName());
             produto1.setPrice(produto.getPrice());
             produto1.setQuantity(produto.getQuantity());
             produtoRepository.save(produto1);
-            return ResponseEntity.ok(produto1);
-        }
-        else{
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Este ID não existe");
-
+            return ResponseEntity.ok(new ProdutoResponseDTO(produto1));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Produto não encontrado");
         }
     }
 
