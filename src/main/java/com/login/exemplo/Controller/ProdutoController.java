@@ -2,6 +2,7 @@ package com.login.exemplo.Controller;
 
 import com.login.exemplo.Entity.Produto;
 import com.login.exemplo.Entity.Usuario;
+import com.login.exemplo.Service.ProdutoService;
 import com.login.exemplo.dto.ProdutoRequestDTO;
 import com.login.exemplo.dto.ProdutoResponseDTO;
 import com.login.exemplo.repositories.ProdutoRepository;
@@ -20,71 +21,40 @@ import java.util.Optional;
 public class ProdutoController {
 
     @Autowired
-    ProdutoRepository produtoRepository;
+    private ProdutoService produtoService;
 
     //Busca por id
     @GetMapping("/{id}")
     public ResponseEntity<?> buscarId(@PathVariable int id){
-        Optional<Produto> produto = produtoRepository.findById(id);
-        if (produto.isPresent()){
-            return ResponseEntity.ok(new ProdutoResponseDTO(produto.get()));
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Produto não encontrado");
-        }
+        return ResponseEntity.ok(produtoService.buscarId(id));
     }
 
     //Busca todos
     @GetMapping("/listar/all")
     public ResponseEntity<List<ProdutoResponseDTO>> buscarTodos() {
-        List<Produto> produtos = produtoRepository.findAll();
-        List<ProdutoResponseDTO> listaDeProdutos = produtos.stream()
-                .map(ProdutoResponseDTO::new)
-                .toList();
-        return ResponseEntity.ok(listaDeProdutos);
+        return ResponseEntity.ok(produtoService.buscarTodos());
     }
 
     //criar produto
     @PostMapping("/criar")
-    public ResponseEntity<?> criarProduto(@Valid @RequestBody ProdutoRequestDTO produto){
-        Produto novo = new Produto(
-                produto.getName(),produto.getPrice(),produto.getQuantity());
-        produtoRepository.save(novo);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Criado com sucesso");
+    public ResponseEntity<ProdutoResponseDTO> criarProduto(@Valid @RequestBody ProdutoRequestDTO produto) {
+        produtoService.criarProduto(produto);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
-    
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletar(@PathVariable int id){
-        boolean exists = produtoRepository.existsById(id);
-        if(exists){
-            produtoRepository.deleteById(id);
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body("Deletado com sucesso");
-        }else{
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Produto Não Encontrado");
-        }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletar(@PathVariable int id) {
+        produtoService.deletar(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
     @PutMapping("/{id}")
     public ResponseEntity<?> alterarProduto(@PathVariable int id, @Valid @RequestBody ProdutoRequestDTO produto) {
-        Optional<Produto> novo = produtoRepository.findById(id);
-        if (novo.isPresent()) {
-            Produto produto1 = novo.get();
-            produto1.setName(produto.getName());
-            produto1.setPrice(produto.getPrice());
-            produto1.setQuantity(produto.getQuantity());
-            produtoRepository.save(produto1);
-            return ResponseEntity.ok(new ProdutoResponseDTO(produto1));
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Produto não encontrado");
-        }
+        return ResponseEntity.ok(produtoService.alterarProduto(id, produto));
     }
 
     @GetMapping("/listar")
     public ResponseEntity<List<ProdutoResponseDTO>> listarProdutos() {
-        List<Produto> produtos = produtoRepository.findAll();
-        List<ProdutoResponseDTO> listaDeProdutos = produtos.stream()
-                .map(ProdutoResponseDTO::new)
-                .toList();
-        return ResponseEntity.ok(listaDeProdutos);
+        return ResponseEntity.ok(produtoService.listarProdutos());
     }
     
 }
